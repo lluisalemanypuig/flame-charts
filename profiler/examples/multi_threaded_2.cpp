@@ -39,7 +39,7 @@ void function_3(const int k)
 	PROFILE_FUNCTION;
 
 	for (int i = 0; i < k; ++i) {
-		// std::cout << "You are great!\n";
+		std::cout << "You are great!\n";
 	}
 }
 
@@ -48,7 +48,7 @@ void function_2(const int k)
 	PROFILE_FUNCTION;
 
 	for (int i = 0; i < k; ++i) {
-		// std::cout << "You are amazing\n";
+		std::cout << "You are amazing\n";
 	}
 }
 
