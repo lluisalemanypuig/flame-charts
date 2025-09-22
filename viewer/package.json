@@ -1,0 +1,19 @@
+{
+  "name": "flame-chart-viewer",
+  "version": "1.0.0",
+  "description": "A serverless application to visualize flame charts.",
+  "main": "src/main.ts",
+  "scripts": {
+    "build": "tsc",
+    "start": "node src-js/main.js",
+    "watch": "tsc -w"
+  },
+  "devDependencies": {
+    "typescript": "^4.0.0"
+  },
+  "author": "Lluís Alemany Puig",
+  "license": "GPL v3 Affero",
+  "dependencies": {
+    "pretty-format": "^30.0.5"
+  }
+}
