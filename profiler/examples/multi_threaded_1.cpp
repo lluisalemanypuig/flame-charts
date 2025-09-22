@@ -91,14 +91,14 @@ void multi_thread_fast(const int n)
 		PROFILE_SCOPE("scope 1");
 		for (int i = 0; i < n; ++i) {
 			function_3(i);
-			std::this_thread::sleep_for(1ms);
+			std::this_thread::sleep_for(1us);
 		}
 	}
 	{
 		PROFILE_SCOPE("scope 2");
 		for (int i = 0; i < n; ++i) {
 			function_3(i);
-			std::this_thread::sleep_for(2ms);
+			std::this_thread::sleep_for(2us);
 		}
 	}
 }
@@ -111,14 +111,14 @@ void multi_thread_slow(const int n)
 		PROFILE_SCOPE("scope 1");
 		for (int i = 0; i < n; ++i) {
 			function_2(i);
-			std::this_thread::sleep_for(100ms);
+			std::this_thread::sleep_for(100us);
 		}
 	}
 	{
 		PROFILE_SCOPE("scope 2");
 		for (int i = 0; i < n; ++i) {
 			function_3(i);
-			std::this_thread::sleep_for(200ms);
+			std::this_thread::sleep_for(200us);
 		}
 	}
 }
