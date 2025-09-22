@@ -1,0 +1,106 @@
+/*********************************************************************
+ *
+ * Examples of Profiling instrumentator and viewer
+ *
+ * Copyright (C) 2025
+ *
+ * This file is part of "Profiling instrumentator and viewer". The full code is
+ * available at:
+ *      https://github.com/lluisalemanypuig/flame-charts.git
+ *
+ * Profiling instrumentator and viewer is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU Affero General Public License
+ * as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Profiling instrumentator and viewer is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Linear Arrangement Library.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Contact:
+ *
+ *     Lluís Alemany Puig (lluis.alemany.puig@gmail.com)
+ *	   https://github.com/lluisalemanypuig
+ *
+ ********************************************************************/
+
+// C++ includes
+#include <iostream>
+#include <thread>
+
+#include "profiler/profiler.hpp"
+
+void function_3(const int k)
+{
+	PROFILE_FUNCTION;
+
+	for (int i = 0; i < k; ++i) {
+		std::cout << "You are great!\n";
+	}
+}
+
+void function_2(const int k)
+{
+	PROFILE_FUNCTION;
+
+	for (int i = 0; i < k; ++i) {
+		std::cout << "You are amazing\n";
+	}
+}
+
+void function_1(const int k)
+{
+	// always start a logger with a function logger
+	PROFILE_FUNCTION;
+
+	for (int i = 0; i < k; ++i) {
+		function_2(i);
+	}
+
+	{
+		// you can time scopes within a function
+		PROFILE_SCOPE("scope 1");
+		for (int i = 0; i < k; ++i) {
+			function_3(i);
+		}
+	}
+	{
+		// you can time scopes within a function
+		PROFILE_SCOPE("scope 2");
+		for (int i = 0; i < k; ++i) {
+			function_3(i);
+		}
+	}
+
+	for (int i = 0; i < k; ++i) {
+		function_2(i);
+	}
+}
+
+int main()
+{
+	const bool status = PROFILER_START_SESSION(
+		"session_single_threaded.json", "session_single_threaded"
+	);
+
+	if (not status) {
+		return 1;
+	}
+
+	PROFILE_FUNCTION;
+
+	function_1(2);
+
+	{
+		PROFILE_SCOPE("scope 1");
+		function_1(2);
+	}
+	{
+		PROFILE_SCOPE("scope 2");
+		function_3(2);
+	}
+}
