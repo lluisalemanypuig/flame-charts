@@ -86,7 +86,6 @@ int main()
 	const bool status = PROFILER_START_SESSION(
 		"session_single_threaded.json", "session_single_threaded"
 	);
-
 	if (not status) {
 		return 1;
 	}
