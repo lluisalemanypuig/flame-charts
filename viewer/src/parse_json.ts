@@ -37,12 +37,16 @@ import { render_fitted_text, render_ticks } from './rendering';
 const RECT_HEIGHT = DimensionConfiguration.RECT_HEIGHT;
 const RULER_HEIGHT = DimensionConfiguration.RULER_HEIGHT;
 
-export function make_rectangles_functions(
+function is_parallel(data: any): boolean {
+	return data.t.startsWith('parallel_');
+}
+
+export function make_rectangles(
 	ctx: CanvasRenderingContext2D,
 	data: any,
 	start_y: number,
 	scale: (t: number) => number
-): Rectangle[] {
+): [Rectangle[], number] {
 	const x_bprof = scale(data.pb);
 	const w_bprof = scale(data.b) - x_bprof;
 
@@ -62,12 +66,24 @@ export function make_rectangles_functions(
 		new Rectangle(x, y, w, h, new RectangleInfo(data.n, data.t, data.l, ''))
 	];
 
+	let max_y: number = start_y;
+	let next_y: number = start_y + RECT_HEIGHT + 5;
+
 	for (let i = 0; i < N; ++i) {
-		const res = make_rectangles_functions(ctx, data.c[i], start_y + RECT_HEIGHT + 5, scale);
-		rectangles = rectangles.concat(res);
+		let rects: Rectangle[];
+		let sub_max_y: number;
+
+		[rects, sub_max_y] = make_rectangles(ctx, data.c[i], next_y, scale);
+		if (is_parallel(data)) {
+			next_y = sub_max_y + RECT_HEIGHT;
+		}
+
+		max_y = Math.max(sub_max_y, max_y);
+
+		rectangles = rectangles.concat(rects);
 	}
 
-	return rectangles;
+	return [rectangles, max_y];
 }
 
 export function make_draw_data(canvas: any, json_data: any, zoom: ZoomData): DrawData {
@@ -90,7 +106,7 @@ export function make_draw_data(canvas: any, json_data: any, zoom: ZoomData): Dra
 
 	draw_data.rectangles = [];
 	for (let i = 0; i < N; ++i) {
-		const res = make_rectangles_functions(ctx, json_data.functions[i], RULER_HEIGHT, scale);
+		const [res, _] = make_rectangles(ctx, json_data.functions[i], RULER_HEIGHT, scale);
 		draw_data.rectangles = draw_data.rectangles.concat(res);
 	}
 
