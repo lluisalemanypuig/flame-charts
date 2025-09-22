@@ -1,54 +1,18 @@
-# My Serverless App
-
-## Overview
+# Viewer for profiling traces
 
 This project is a serverless application built using TypeScript. It consists of a viewer that renders an HTML interface and utilizes TypeScript for its logic.
 
-## Project Structure
-
-```
-viewer/
-├── html
-│   └── index.html
-├── package.json
-├── README.md
-├── src
-│   └── main.ts
-└── tsconfig.json
-```
-
 ## Setup Instructions
 
-1. Clone the repository:
+1. Install the dependencies and tools:
 
-   ```
-   git clone <repository-url>
-   cd my-serverless-app
-   ```
+    - `tsc`: a TypeScript compiler.
+    - `esbuild`: a fast JavaScript bundler and minifier that helps optimize and package your code for deployment.
 
-2. Install the dependencies:
+2. Compile the source code with the command
 
-   ```
-   npm install
-   ```
+    `$ ./build/compile.sh`
 
-3. Build the TypeScript files:
+3. Open the `viewer/index.html` file in a web browser to view the application.
 
-   ```
-   npm run build
-   ```
-
-4. Open the `viewer/html/index.html` file in a web browser to view the application.
-
-## Usage
-
-- The application initializes in the `main.ts` file, which handles all the logic and interactions.
-- The HTML file serves as the base structure for the viewer.
-
-## Contributing
-
-Feel free to submit issues or pull requests for any improvements or bug fixes.
-
-## License
-
-This project is licensed under the MIT License.
+4. Use the `Browse...` button at the top left corner to import a profiling trace. You can generate examples of traces using the examples.
