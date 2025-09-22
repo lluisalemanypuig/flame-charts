@@ -125,6 +125,8 @@ public:
 			m_current_session = false;
 			return false;
 		}
+		fout.setf(std::ios::fixed);
+		fout.precision(3);
 		fout << "{\"session_id\":\"" << sid << "\",\"functions\":[";
 
 		stack.reserve(512);
