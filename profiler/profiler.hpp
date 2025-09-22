@@ -150,7 +150,7 @@ public:
 	[[nodiscard]] inline double
 	get_time_since_entry(const detail::time_point& p) const
 	{
-		return detail::elapsed_time(p, entry_time);
+		return detail::elapsed_time(entry_time, p);
 	}
 
 	// end the session
