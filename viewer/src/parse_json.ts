@@ -61,8 +61,22 @@ export function make_rectangles(
 	const N = data.c.length;
 
 	let rectangles: Rectangle[] = [
-		new Rectangle(x_bprof, y + 5, w_bprof, h - 10, new RectangleInfo(data.n, data.t, data.l, ''), '#0000ff'),
-		new Rectangle(x_eprof, y + 5, w_eprof, h - 10, new RectangleInfo(data.n, data.t, data.l, ''), '#ff0000'),
+		new Rectangle(
+			x_bprof,
+			y + 5,
+			w_bprof,
+			h - 10,
+			new RectangleInfo(data.n, 'Profiler overhead time', data.l, ''),
+			'#0000ff'
+		),
+		new Rectangle(
+			x_eprof,
+			y + 5,
+			w_eprof,
+			h - 10,
+			new RectangleInfo(data.n, 'Profiler overhead time', data.l, ''),
+			'#ff0000'
+		),
 		new Rectangle(x, y, w, h, new RectangleInfo(data.n, data.t, data.l, ''))
 	];
 	let rectangle_borders: RectangleBorder[] = [];
