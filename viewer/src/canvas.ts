@@ -33,6 +33,7 @@ import { ZoomData } from './models/ZoomData';
 import { PanData } from './models/PanData';
 import { DrawData } from './models/DrawData';
 import { DimensionConfiguration } from './models/Config';
+import { intersect } from './utils';
 
 const RULER_HEIGHT = DimensionConfiguration.RULER_HEIGHT;
 const RECT_HEIGHT = DimensionConfiguration.RECT_HEIGHT;
@@ -42,7 +43,8 @@ function draw_ruler(
 	ctx: CanvasRenderingContext2D,
 	zoom: ZoomData,
 	pan: PanData,
-	draw_data: DrawData
+	ruler_tick_positions: number[],
+	ruler_tick_labels: string[]
 ) {
 	// Ruler background
 	//ctx.save();
@@ -61,14 +63,14 @@ function draw_ruler(
 	ctx.font = '12px sans-serif';
 	ctx.fillStyle = '#000000';
 
-	for (let i = 0; i < draw_data.ruler_tick_positions.length; ++i) {
+	for (let i = 0; i < ruler_tick_positions.length; ++i) {
 		// Map time to pixel position
-		const x = draw_data.ruler_tick_positions[i] * (1 + zoom.scale_x) + pan.x;
+		const x = ruler_tick_positions[i] * (1 + zoom.scale_x) + pan.x;
 
 		// Tick label
 		ctx.textAlign = 'left';
 		ctx.textBaseline = 'top';
-		ctx.fillText(draw_data.ruler_tick_labels[i], x + 2, RULER_HEIGHT - 16);
+		ctx.fillText(ruler_tick_labels[i], x + 2, RULER_HEIGHT - 16);
 
 		// Tick line
 		ctx.strokeStyle = '#000000ff';
@@ -120,7 +122,16 @@ function draw_tooltip(ctx: CanvasRenderingContext2D, zoom: ZoomData, pan: PanDat
 	}
 }
 
-function draw_rectangles(ctx: CanvasRenderingContext2D, zoom: ZoomData, pan: PanData, rectangles: Rectangle[]) {
+function draw_rectangles(
+	canvas: any,
+	ctx: CanvasRenderingContext2D,
+	zoom: ZoomData,
+	pan: PanData,
+	rectangles: Rectangle[]
+) {
+	const W = canvas.width;
+	const H = canvas.height;
+
 	ctx.font = '16px sans-serif';
 	ctx.strokeStyle = '#333';
 
@@ -132,18 +143,19 @@ function draw_rectangles(ctx: CanvasRenderingContext2D, zoom: ZoomData, pan: Pan
 		const w = rect.width * (1 + zoom.scale_x);
 		const h = rect.height;
 
-		ctx.fillStyle = rect.color;
-		ctx.fillRect(x, y, w, h);
+		if (intersect(0, W, x, x + w) && intersect(0, H, y, y + h)) {
+			ctx.fillStyle = rect.color;
+			ctx.fillRect(x, y, w, h);
+			ctx.strokeRect(x, y, w, h);
 
-		if (rect.info.fitted_text.length > 0) {
-			ctx.fillStyle = '#222';
-			ctx.fillText(rect.info.fitted_text, x + 5, y + RECT_HEIGHT * (3 / 4));
-		}
+			if (rect.info.fitted_text.length > 0) {
+				ctx.fillStyle = '#222';
+				ctx.fillText(rect.info.fitted_text, x + 5, y + RECT_HEIGHT * (3 / 4));
+			}
 
-		ctx.strokeRect(x, y, w, h);
-
-		if (rect.selected) {
-			selected_rect = rect;
+			if (rect.selected) {
+				selected_rect = rect;
+			}
 		}
 	});
 
@@ -154,11 +166,15 @@ function draw_rectangles(ctx: CanvasRenderingContext2D, zoom: ZoomData, pan: Pan
 }
 
 function draw_borders(
+	canvas: any,
 	ctx: CanvasRenderingContext2D,
 	zoom: ZoomData,
 	pan: PanData,
 	rectangle_borders: RectangleBorder[]
 ) {
+	const W = canvas.width;
+	const H = canvas.height;
+
 	rectangle_borders.forEach((rect_border: RectangleBorder) => {
 		const x = rect_border.x * (1 + zoom.scale_x) + pan.x;
 		const y = rect_border.y + pan.y;
@@ -166,8 +182,10 @@ function draw_borders(
 		const w = rect_border.width * (1 + zoom.scale_x);
 		const h = rect_border.height;
 
-		ctx.strokeStyle = rect_border.color;
-		ctx.strokeRect(x, y, w, h);
+		if (intersect(0, W, x, x + w) && intersect(0, H, y, y + h)) {
+			ctx.strokeStyle = rect_border.color;
+			ctx.strokeRect(x, y, w, h);
+		}
 	});
 }
 
@@ -178,9 +196,9 @@ export function update_canvas(canvas: any, zoom: ZoomData, pan: PanData, draw_da
 
 	ctx.scale(zoom.value, zoom.value);
 
-	draw_rectangles(ctx, zoom, pan, draw_data.rectangles);
-	draw_borders(ctx, zoom, pan, draw_data.rectangle_borders);
-	draw_ruler(canvas, ctx, zoom, pan, draw_data);
+	draw_borders(canvas, ctx, zoom, pan, draw_data.rectangle_borders);
+	draw_rectangles(canvas, ctx, zoom, pan, draw_data.rectangles);
+	draw_ruler(canvas, ctx, zoom, pan, draw_data.ruler_tick_positions, draw_data.ruler_tick_labels);
 
 	ctx.restore();
 }

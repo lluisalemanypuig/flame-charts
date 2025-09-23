@@ -112,7 +112,6 @@ window.onload = function () {
 			let zoom_label = document.getElementById('zoom_level') as HTMLSpanElement;
 			zoom_label.textContent = `Zoom: ${Math.round(zoom * 100)}%`;
 		}
-		update_canvas(canvas, make_zoom_data(), make_pan_data(), draw_data);
 	});
 
 	// click
