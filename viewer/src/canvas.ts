@@ -96,7 +96,7 @@ function draw_tooltip(ctx: CanvasRenderingContext2D, zoom: ZoomData, pan: PanDat
 	}
 
 	const tooltip_height = 5 + lines.length * (14 + 5) + 5;
-	const tooltip_x = rect.x * (1 + zoom.scale_x) + pan.x;
+	const tooltip_x = Math.max(0, rect.x * (1 + zoom.scale_x) + pan.x);
 	const tooltip_y = rect.y + pan.y;
 
 	// Draw tooltip background
