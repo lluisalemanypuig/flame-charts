@@ -15,4 +15,4 @@ This project is a serverless application built using TypeScript. It consists of 
 
 3. Open the `viewer/index.html` file in a web browser to view the application.
 
-4. Use the `Browse...` button at the top left corner to import a profiling trace. You can generate examples of traces using the examples.
+4. Use the `Browse...` button at the top left corner to import a profiling trace. You can generate examples of traces using the programs in the [profiler/examples](profiler/examples) directory.

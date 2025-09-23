@@ -4,16 +4,17 @@ This repository is an instrumentator for C++ projects to produce profiling trace
 
 ## Use them in your C++ projects
 
-The code is a single header, so there is no need for installation. To use it I would recommend to create a special header file to easily turn on and off profiling.
+The code instrumentator code is a single header, so there is no need for installation. To use it I would recommend to create a special header file to easily turn on and off profiling.
 
 ```c++
 #pragma once
 
+// comment/uncomment this line to 'turn on/off' the profiling macros
 #define USE_PROFILING
 
 #if defined USE_PROFILING
 
-#include "profiler/profiler.hpp"
+#include <profiler/profiler.hpp>
 
 #else
 
@@ -28,8 +29,6 @@ The code is a single header, so there is no need for installation. To use it I w
 
 #endif
 ```
-
-and turn on and off (by commenting) the line `#define USE_PROFILING`.
 
 ### Examples
 
