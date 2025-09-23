@@ -55,12 +55,16 @@ export function render_fitted_text(ctx: CanvasRenderingContext2D, zoom: ZoomData
 	const N = draw_data.rectangles.length;
 	for (let i = 2; i < N; i += 3) {
 		let r = draw_data.rectangles[i];
-		r.info.fitted_text = fit_text_to_width(
-			ctx,
-			`${r.info.name} :: ${r.info.type}`,
-			ETC_TEXT,
-			r.width * (1 + zoom.scale_x) - 7
-		);
+		if (r.width * (1 + zoom.scale_x) > 30) {
+			r.info.fitted_text = fit_text_to_width(
+				ctx,
+				`${r.info.name} :: ${r.info.type}`,
+				ETC_TEXT,
+				r.width * (1 + zoom.scale_x) - 7
+			);
+		} else {
+			r.info.fitted_text = '';
+		}
 	}
 }
 

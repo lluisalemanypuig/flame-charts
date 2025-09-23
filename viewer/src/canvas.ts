@@ -122,6 +122,8 @@ function draw_tooltip(ctx: CanvasRenderingContext2D, zoom: ZoomData, pan: PanDat
 
 function draw_rectangles(ctx: CanvasRenderingContext2D, zoom: ZoomData, pan: PanData, rectangles: Rectangle[]) {
 	ctx.font = '16px sans-serif';
+	ctx.strokeStyle = '#333';
+
 	let selected_rect: Rectangle | undefined;
 	rectangles.forEach((rect: Rectangle) => {
 		const x = rect.x * (1 + zoom.scale_x) + pan.x;
@@ -133,10 +135,11 @@ function draw_rectangles(ctx: CanvasRenderingContext2D, zoom: ZoomData, pan: Pan
 		ctx.fillStyle = rect.color;
 		ctx.fillRect(x, y, w, h);
 
-		ctx.fillStyle = '#222';
-		ctx.fillText(rect.info.fitted_text, x + 5, y + RECT_HEIGHT * (3 / 4));
+		if (rect.info.fitted_text.length > 0) {
+			ctx.fillStyle = '#222';
+			ctx.fillText(rect.info.fitted_text, x + 5, y + RECT_HEIGHT * (3 / 4));
+		}
 
-		ctx.strokeStyle = '#333';
 		ctx.strokeRect(x, y, w, h);
 
 		if (rect.selected) {
