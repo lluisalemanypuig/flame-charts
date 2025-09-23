@@ -30,7 +30,7 @@
 
 import { DimensionConfiguration } from './models/Config';
 import { DrawData } from './models/DrawData';
-import { Rectangle, RectangleInfo } from './models/Rectangle';
+import { Rectangle, RectangleBorder, RectangleInfo } from './models/Rectangle';
 import { ZoomData } from './models/ZoomData';
 import { render_fitted_text, render_ticks } from './rendering';
 
@@ -46,7 +46,7 @@ export function make_rectangles(
 	data: any,
 	start_y: number,
 	scale: (t: number) => number
-): [Rectangle[], number] {
+): [Rectangle[], RectangleBorder[], number] {
 	const x_bprof = scale(data.pb);
 	const w_bprof = scale(data.b) - x_bprof;
 
@@ -65,15 +65,17 @@ export function make_rectangles(
 		new Rectangle(x_eprof, y + 5, w_eprof, h - 10, new RectangleInfo(data.n, data.t, data.l, ''), '#ff0000'),
 		new Rectangle(x, y, w, h, new RectangleInfo(data.n, data.t, data.l, ''))
 	];
+	let rectangle_borders: RectangleBorder[] = [];
 
 	let max_y: number = start_y;
 	let next_y: number = start_y + RECT_HEIGHT + 5;
 
 	for (let i = 0; i < N; ++i) {
 		let rects: Rectangle[];
+		let rect_borders: RectangleBorder[];
 		let sub_max_y: number;
 
-		[rects, sub_max_y] = make_rectangles(ctx, data.c[i], next_y, scale);
+		[rects, rect_borders, sub_max_y] = make_rectangles(ctx, data.c[i], next_y, scale);
 		if (is_parallel(data)) {
 			next_y = sub_max_y + RECT_HEIGHT;
 		}
@@ -81,9 +83,14 @@ export function make_rectangles(
 		max_y = Math.max(sub_max_y, max_y);
 
 		rectangles = rectangles.concat(rects);
+		rectangle_borders = rectangle_borders.concat(rect_borders);
 	}
 
-	return [rectangles, max_y];
+	if (is_parallel(data)) {
+		rectangle_borders.push(new RectangleBorder(x, y + RECT_HEIGHT + 2.5, w, max_y - start_y, '#ff00d4ff'));
+	}
+
+	return [rectangles, rectangle_borders, max_y];
 }
 
 export function make_draw_data(canvas: any, json_data: any, zoom: ZoomData): DrawData {
@@ -92,7 +99,7 @@ export function make_draw_data(canvas: any, json_data: any, zoom: ZoomData): Dra
 	// Set this to the context so that the width of a text is calculated properly.
 	ctx.font = '16px sans-serif';
 
-	let draw_data: DrawData = new DrawData([], [], []);
+	let draw_data: DrawData = new DrawData([], [], [], []);
 
 	const W = canvas.width;
 
@@ -106,8 +113,9 @@ export function make_draw_data(canvas: any, json_data: any, zoom: ZoomData): Dra
 
 	draw_data.rectangles = [];
 	for (let i = 0; i < N; ++i) {
-		const [res, _] = make_rectangles(ctx, json_data.functions[i], RULER_HEIGHT, scale);
-		draw_data.rectangles = draw_data.rectangles.concat(res);
+		const [rects, rect_borders, _] = make_rectangles(ctx, json_data.functions[i], RULER_HEIGHT, scale);
+		draw_data.rectangles = draw_data.rectangles.concat(rects);
+		draw_data.rectangle_borders = draw_data.rectangle_borders.concat(rect_borders);
 	}
 
 	render_ticks(min_time, max_time, scale, zoom, draw_data);

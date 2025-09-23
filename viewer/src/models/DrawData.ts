@@ -28,16 +28,18 @@
  *
  ********************************************************************/
 
-import { Rectangle } from './Rectangle';
+import { Rectangle, RectangleBorder } from './Rectangle';
 
 export class DrawData {
 	public rectangles: Rectangle[];
+	public rectangle_borders: RectangleBorder[];
 
 	public ruler_tick_positions: number[];
 	public ruler_tick_labels: string[];
 
-	constructor(rects: Rectangle[], rtp: number[], rtl: string[]) {
+	constructor(rects: Rectangle[], rect_borders: RectangleBorder[], rtp: number[], rtl: string[]) {
 		this.rectangles = rects;
+		this.rectangle_borders = rect_borders;
 		this.ruler_tick_positions = rtp;
 		this.ruler_tick_labels = rtl;
 	}

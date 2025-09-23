@@ -61,7 +61,7 @@ let start_mouse_y: number;
 
 // Data to display
 let last_selected_rect: Rectangle | undefined;
-let draw_data: DrawData = new DrawData([], [], []);
+let draw_data: DrawData = new DrawData([], [], [], []);
 
 function reset_zoom_and_pan_data() {
 	zoom = 1;

@@ -28,7 +28,7 @@
  *
  ********************************************************************/
 
-import { Rectangle } from './models/Rectangle';
+import { Rectangle, RectangleBorder } from './models/Rectangle';
 import { ZoomData } from './models/ZoomData';
 import { PanData } from './models/PanData';
 import { DrawData } from './models/DrawData';
@@ -120,16 +120,10 @@ function draw_tooltip(ctx: CanvasRenderingContext2D, zoom: ZoomData, pan: PanDat
 	}
 }
 
-export function update_canvas(canvas: any, zoom: ZoomData, pan: PanData, draw_data: DrawData) {
-	const ctx = canvas.getContext('2d')!;
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	ctx.save();
-
-	ctx.scale(zoom.value, zoom.value);
-
+function draw_rectangles(ctx: CanvasRenderingContext2D, zoom: ZoomData, pan: PanData, rectangles: Rectangle[]) {
 	ctx.font = '16px sans-serif';
 	let selected_rect: Rectangle | undefined;
-	draw_data.rectangles.forEach((rect: Rectangle) => {
+	rectangles.forEach((rect: Rectangle) => {
 		const x = rect.x * (1 + zoom.scale_x) + pan.x;
 		const y = rect.y + pan.y;
 
@@ -142,7 +136,6 @@ export function update_canvas(canvas: any, zoom: ZoomData, pan: PanData, draw_da
 		ctx.fillStyle = '#222';
 		ctx.fillText(rect.info.fitted_text, x + 5, y + RECT_HEIGHT * (3 / 4));
 
-		// Draw tooltip border
 		ctx.strokeStyle = '#333';
 		ctx.strokeRect(x, y, w, h);
 
@@ -155,8 +148,37 @@ export function update_canvas(canvas: any, zoom: ZoomData, pan: PanData, draw_da
 	if (selected_rect) {
 		draw_tooltip(ctx, zoom, pan, selected_rect);
 	}
+}
 
+function draw_borders(
+	ctx: CanvasRenderingContext2D,
+	zoom: ZoomData,
+	pan: PanData,
+	rectangle_borders: RectangleBorder[]
+) {
+	rectangle_borders.forEach((rect_border: RectangleBorder) => {
+		const x = rect_border.x * (1 + zoom.scale_x) + pan.x;
+		const y = rect_border.y + pan.y;
+
+		const w = rect_border.width * (1 + zoom.scale_x);
+		const h = rect_border.height;
+
+		ctx.strokeStyle = rect_border.color;
+		ctx.strokeRect(x, y, w, h);
+	});
+}
+
+export function update_canvas(canvas: any, zoom: ZoomData, pan: PanData, draw_data: DrawData) {
+	const ctx = canvas.getContext('2d')!;
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	ctx.save();
+
+	ctx.scale(zoom.value, zoom.value);
+
+	draw_rectangles(ctx, zoom, pan, draw_data.rectangles);
+	draw_borders(ctx, zoom, pan, draw_data.rectangle_borders);
 	draw_ruler(canvas, ctx, zoom, pan, draw_data);
+
 	ctx.restore();
 }
 
