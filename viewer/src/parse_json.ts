@@ -61,6 +61,9 @@ export function make_rectangles(
 
 	const N = json_data.c.length;
 
+	let function_times: Rectangle[] = [
+		new Rectangle(x, y, w, h, new RectangleInfo(json_data.n, json_data.t, json_data.l, ''))
+	];
 	let overhead_times: Rectangle[] = [
 		new Rectangle(
 			x_bprof,
@@ -79,16 +82,13 @@ export function make_rectangles(
 			'#ff0000'
 		)
 	];
-	let function_times: Rectangle[] = [
-		new Rectangle(x, y, w, h, new RectangleInfo(json_data.n, json_data.t, json_data.l, ''))
-	];
 	let par_regions: RectangleBorder[] = [];
 
 	let max_y: number = start_y;
 	let next_y: number = start_y + RECT_HEIGHT + 5;
 
 	for (let i = 0; i < N; ++i) {
-		let [times, overheads, rect_borders, sub_max_y] = make_rectangles(ctx, json_data.c[i], next_y, scale);
+		let [times, overheads, par, sub_max_y] = make_rectangles(ctx, json_data.c[i], next_y, scale);
 		if (is_parallel(json_data)) {
 			next_y = sub_max_y + RECT_HEIGHT;
 		}
@@ -97,7 +97,7 @@ export function make_rectangles(
 
 		function_times = function_times.concat(times);
 		overhead_times = overhead_times.concat(overheads);
-		par_regions = par_regions.concat(rect_borders);
+		par_regions = par_regions.concat(par);
 	}
 
 	if (is_parallel(json_data)) {
@@ -109,9 +109,6 @@ export function make_rectangles(
 
 export function make_draw_data(canvas: any, json_data: any, zoom: ZoomData, pan: PanData): DrawData {
 	let ctx = canvas.getContext('2d')!;
-
-	// Set this to the context so that the width of a text is calculated properly.
-	ctx.font = '16px sans-serif';
 
 	let draw_data: DrawData = new DrawData([], [], [], [], []);
 
@@ -125,17 +122,18 @@ export function make_draw_data(canvas: any, json_data: any, zoom: ZoomData, pan:
 		return ((t - min_time) / (max_time - min_time)) * W;
 	};
 
-	draw_data.function_time = [];
-	draw_data.overhead_time = [];
 	for (let i = 0; i < N; ++i) {
-		const [times, overheads, rect_borders, _] = make_rectangles(ctx, json_data.functions[i], RULER_HEIGHT, scale);
+		const [times, overheads, par_regions, _] = make_rectangles(ctx, json_data.functions[i], RULER_HEIGHT, scale);
 		draw_data.function_time = draw_data.function_time.concat(times);
 		draw_data.overhead_time = draw_data.overhead_time.concat(overheads);
-		draw_data.parallel_regions = draw_data.parallel_regions.concat(rect_borders);
+		draw_data.parallel_regions = draw_data.parallel_regions.concat(par_regions);
 	}
 
+	console.log(draw_data.overhead_time.length);
 	draw_data.init_trees();
 
+	// Set this to the context so that the width of a text is calculated properly.
+	ctx.font = '16px sans-serif';
 	render_ticks(min_time, max_time, scale, zoom, draw_data);
 	render_fitted_text(canvas, ctx, zoom, pan, draw_data);
 
