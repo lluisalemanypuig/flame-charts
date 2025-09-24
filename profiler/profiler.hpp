@@ -269,7 +269,7 @@ protected:
 
 	std::string_view m_function_name;
 	detail::profiler_type m_type;
-	uint16_t m_line;
+	int32_t m_line;
 	detail::time_point m_profile_begin;
 	detail::time_point m_begin;
 };
