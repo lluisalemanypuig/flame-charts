@@ -112,6 +112,8 @@ window.onload = function () {
 			let zoom_label = document.getElementById('zoom_level') as HTMLSpanElement;
 			zoom_label.textContent = `Zoom: ${Math.round(zoom * 100)}%`;
 		}
+
+		update_canvas(canvas, make_zoom_data(), make_pan_data(), draw_data);
 	});
 
 	// click
@@ -123,7 +125,7 @@ window.onload = function () {
 		const mouse_x = mx - pan_x;
 		const mouse_y = my - DimensionConfiguration.RULER_HEIGHT - pan_y;
 
-		let selected_rect = draw_data.rectangles.find((r: Rectangle) => {
+		const selected_rect = draw_data.rectangles.find((r: Rectangle) => {
 			const xx = r.x * (1 + scale_x);
 			const yy = r.y;
 			const ww = r.width * (1 + scale_x);
@@ -172,12 +174,12 @@ window.onload = function () {
 	let file_input = document.getElementById('file_input') as HTMLInputElement;
 	file_input.addEventListener('change', (event: any) => {
 		reset_zoom_and_pan_data();
-		file_input_changed(event).then((data: any) => {
+		file_input_changed(event).then((json_data: any) => {
 			const session_id = document.getElementById('session_id') as HTMLLabelElement;
-			session_id.textContent = data.session_id;
+			session_id.textContent = json_data.session_id;
 
 			const zoom = make_zoom_data();
-			draw_data = make_draw_data(canvas, data, zoom);
+			draw_data = make_draw_data(canvas, json_data, zoom);
 
 			update_canvas(canvas, zoom, make_pan_data(), draw_data);
 		});

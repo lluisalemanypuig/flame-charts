@@ -33,7 +33,6 @@ import { ZoomData } from './models/ZoomData';
 import { PanData } from './models/PanData';
 import { DrawData } from './models/DrawData';
 import { DimensionConfiguration } from './models/Config';
-import { intersect } from './utils';
 
 const RULER_HEIGHT = DimensionConfiguration.RULER_HEIGHT;
 const RECT_HEIGHT = DimensionConfiguration.RECT_HEIGHT;
@@ -43,8 +42,7 @@ function draw_ruler(
 	ctx: CanvasRenderingContext2D,
 	zoom: ZoomData,
 	pan: PanData,
-	ruler_tick_positions: number[],
-	ruler_tick_labels: string[]
+	draw_data: DrawData
 ) {
 	// Ruler background
 	//ctx.save();
@@ -63,14 +61,14 @@ function draw_ruler(
 	ctx.font = '12px sans-serif';
 	ctx.fillStyle = '#000000';
 
-	for (let i = 0; i < ruler_tick_positions.length; ++i) {
+	for (let i = 0; i < draw_data.ruler_tick_positions.length; ++i) {
 		// Map time to pixel position
-		const x = ruler_tick_positions[i] * (1 + zoom.scale_x) + pan.x;
+		const x = draw_data.ruler_tick_positions[i] * (1 + zoom.scale_x) + pan.x;
 
 		// Tick label
 		ctx.textAlign = 'left';
 		ctx.textBaseline = 'top';
-		ctx.fillText(ruler_tick_labels[i], x + 2, RULER_HEIGHT - 16);
+		ctx.fillText(draw_data.ruler_tick_labels[i], x + 2, RULER_HEIGHT - 16);
 
 		// Tick line
 		ctx.strokeStyle = '#000000ff';
@@ -122,40 +120,31 @@ function draw_tooltip(ctx: CanvasRenderingContext2D, zoom: ZoomData, pan: PanDat
 	}
 }
 
-function draw_rectangles(
-	canvas: any,
-	ctx: CanvasRenderingContext2D,
-	zoom: ZoomData,
-	pan: PanData,
-	rectangles: Rectangle[]
-) {
-	const W = canvas.width;
-	const H = canvas.height;
-
+function draw_rectangles(ctx: CanvasRenderingContext2D, zoom: ZoomData, pan: PanData, draw_data: DrawData) {
 	ctx.font = '16px sans-serif';
 	ctx.strokeStyle = '#333';
 
 	let selected_rect: Rectangle | undefined;
-	rectangles.forEach((rect: Rectangle) => {
+
+	// TODO: iterate only through the rectangles in the viewport
+	draw_data.rectangles.forEach((rect: Rectangle) => {
 		const x = rect.x * (1 + zoom.scale_x) + pan.x;
 		const y = rect.y + pan.y;
 
 		const w = rect.width * (1 + zoom.scale_x);
 		const h = rect.height;
 
-		if (intersect(0, W, x, x + w) && intersect(0, H, y, y + h)) {
-			ctx.fillStyle = rect.color;
-			ctx.fillRect(x, y, w, h);
-			ctx.strokeRect(x, y, w, h);
+		ctx.fillStyle = rect.color;
+		ctx.fillRect(x, y, w, h);
+		ctx.strokeRect(x, y, w, h);
 
-			if (rect.info.fitted_text.length > 0) {
-				ctx.fillStyle = '#222';
-				ctx.fillText(rect.info.fitted_text, x + 5, y + RECT_HEIGHT * (3 / 4));
-			}
+		if (rect.info.fitted_text.length > 0) {
+			ctx.fillStyle = '#222';
+			ctx.fillText(rect.info.fitted_text, x + 5, y + RECT_HEIGHT * (3 / 4));
+		}
 
-			if (rect.selected) {
-				selected_rect = rect;
-			}
+		if (rect.selected) {
+			selected_rect = rect;
 		}
 	});
 
@@ -165,27 +154,17 @@ function draw_rectangles(
 	}
 }
 
-function draw_borders(
-	canvas: any,
-	ctx: CanvasRenderingContext2D,
-	zoom: ZoomData,
-	pan: PanData,
-	rectangle_borders: RectangleBorder[]
-) {
-	const W = canvas.width;
-	const H = canvas.height;
+function draw_parallel_regions(ctx: CanvasRenderingContext2D, zoom: ZoomData, pan: PanData, draw_data: DrawData) {
+	// TODO: iterate only through the rectangles in the viewport
+	draw_data.parallel_regions.forEach((par_region: RectangleBorder) => {
+		const x = par_region.x * (1 + zoom.scale_x) + pan.x;
+		const y = par_region.y + pan.y;
 
-	rectangle_borders.forEach((rect_border: RectangleBorder) => {
-		const x = rect_border.x * (1 + zoom.scale_x) + pan.x;
-		const y = rect_border.y + pan.y;
+		const w = par_region.width * (1 + zoom.scale_x);
+		const h = par_region.height;
 
-		const w = rect_border.width * (1 + zoom.scale_x);
-		const h = rect_border.height;
-
-		if (intersect(0, W, x, x + w) && intersect(0, H, y, y + h)) {
-			ctx.strokeStyle = rect_border.color;
-			ctx.strokeRect(x, y, w, h);
-		}
+		ctx.strokeStyle = par_region.color;
+		ctx.strokeRect(x, y, w, h);
 	});
 }
 
@@ -196,9 +175,9 @@ export function update_canvas(canvas: any, zoom: ZoomData, pan: PanData, draw_da
 
 	ctx.scale(zoom.value, zoom.value);
 
-	draw_borders(canvas, ctx, zoom, pan, draw_data.rectangle_borders);
-	draw_rectangles(canvas, ctx, zoom, pan, draw_data.rectangles);
-	draw_ruler(canvas, ctx, zoom, pan, draw_data.ruler_tick_positions, draw_data.ruler_tick_labels);
+	draw_parallel_regions(ctx, zoom, pan, draw_data);
+	draw_rectangles(ctx, zoom, pan, draw_data);
+	draw_ruler(canvas, ctx, zoom, pan, draw_data);
 
 	ctx.restore();
 }

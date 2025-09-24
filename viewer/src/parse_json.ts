@@ -79,7 +79,7 @@ export function make_rectangles(
 		),
 		new Rectangle(x, y, w, h, new RectangleInfo(data.n, data.t, data.l, ''))
 	];
-	let rectangle_borders: RectangleBorder[] = [];
+	let par_regions: RectangleBorder[] = [];
 
 	let max_y: number = start_y;
 	let next_y: number = start_y + RECT_HEIGHT + 5;
@@ -97,14 +97,14 @@ export function make_rectangles(
 		max_y = Math.max(sub_max_y, max_y);
 
 		rectangles = rectangles.concat(rects);
-		rectangle_borders = rectangle_borders.concat(rect_borders);
+		par_regions = par_regions.concat(rect_borders);
 	}
 
 	if (is_parallel(data)) {
-		rectangle_borders.push(new RectangleBorder(x, y + RECT_HEIGHT + 2.5, w, max_y - start_y, '#ff00d4ff'));
+		par_regions.push(new RectangleBorder(x, y + RECT_HEIGHT + 2.5, w, max_y - start_y, '#ff00d4ff'));
 	}
 
-	return [rectangles, rectangle_borders, max_y];
+	return [rectangles, par_regions, max_y];
 }
 
 export function make_draw_data(canvas: any, json_data: any, zoom: ZoomData): DrawData {
@@ -129,7 +129,7 @@ export function make_draw_data(canvas: any, json_data: any, zoom: ZoomData): Dra
 	for (let i = 0; i < N; ++i) {
 		const [rects, rect_borders, _] = make_rectangles(ctx, json_data.functions[i], RULER_HEIGHT, scale);
 		draw_data.rectangles = draw_data.rectangles.concat(rects);
-		draw_data.rectangle_borders = draw_data.rectangle_borders.concat(rect_borders);
+		draw_data.parallel_regions = draw_data.parallel_regions.concat(rect_borders);
 	}
 
 	render_ticks(min_time, max_time, scale, zoom, draw_data);

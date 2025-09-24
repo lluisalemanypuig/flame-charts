@@ -30,6 +30,7 @@
 
 import { DimensionConfiguration } from './models/Config';
 import { DrawData } from './models/DrawData';
+import { Rectangle } from './models/Rectangle';
 import { ZoomData } from './models/ZoomData';
 
 const ETC_TEXT = DimensionConfiguration.ETC_TEXT;
@@ -52,9 +53,7 @@ function fit_text_to_width(ctx: CanvasRenderingContext2D, text: string, etc: str
 }
 
 export function render_fitted_text(ctx: CanvasRenderingContext2D, zoom: ZoomData, draw_data: DrawData) {
-	const N = draw_data.rectangles.length;
-	for (let i = 2; i < N; i += 3) {
-		let r = draw_data.rectangles[i];
+	draw_data.rectangles.forEach((r: Rectangle) => {
 		if (r.width * (1 + zoom.scale_x) > 30) {
 			r.info.fitted_text = fit_text_to_width(
 				ctx,
@@ -65,7 +64,7 @@ export function render_fitted_text(ctx: CanvasRenderingContext2D, zoom: ZoomData
 		} else {
 			r.info.fitted_text = '';
 		}
-	}
+	});
 }
 
 export function render_ticks(
