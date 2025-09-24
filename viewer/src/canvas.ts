@@ -127,8 +127,9 @@ function draw_function_times(
 	zoom: ZoomData,
 	pan: PanData,
 	draw: DrawData
-) {
+): Rectangle | undefined {
 	let selected_rect: Rectangle | undefined;
+	ctx.font = '16px sans-serif';
 
 	const rects = draw.tree_function_time.search(interval);
 	rects.forEach((rect: Rectangle) => {
@@ -140,6 +141,7 @@ function draw_function_times(
 
 		ctx.fillStyle = rect.color;
 		ctx.fillRect(x, y, w, h);
+		ctx.strokeStyle = '#333';
 		ctx.strokeRect(x, y, w, h);
 
 		if (rect.info.fitted_text.length > 0) {
@@ -152,10 +154,7 @@ function draw_function_times(
 		}
 	});
 
-	// Draw tooltip if a rectangle is selected
-	if (selected_rect) {
-		draw_tooltip(ctx, zoom, pan, selected_rect);
-	}
+	return selected_rect;
 }
 
 function draw_overhead_times(
@@ -164,8 +163,9 @@ function draw_overhead_times(
 	zoom: ZoomData,
 	pan: PanData,
 	draw: DrawData
-) {
+): Rectangle | undefined {
 	let selected_rect: Rectangle | undefined;
+	ctx.font = '16px sans-serif';
 
 	const rects = draw.tree_overhead_time.search(interval);
 	rects.forEach((rect: Rectangle) => {
@@ -177,6 +177,7 @@ function draw_overhead_times(
 
 		ctx.fillStyle = rect.color;
 		ctx.fillRect(x, y, w, h);
+		ctx.strokeStyle = '#333';
 		ctx.strokeRect(x, y, w, h);
 
 		if (rect.selected) {
@@ -184,10 +185,7 @@ function draw_overhead_times(
 		}
 	});
 
-	// Draw tooltip if a rectangle is selected
-	if (selected_rect) {
-		draw_tooltip(ctx, zoom, pan, selected_rect);
-	}
+	return selected_rect;
 }
 
 function draw_parallel_regions(
@@ -213,13 +211,16 @@ function draw_parallel_regions(
 }
 
 function draw_times(canvas: any, ctx: CanvasRenderingContext2D, zoom: ZoomData, pan: PanData, draw: DrawData) {
-	ctx.font = '16px sans-serif';
-	ctx.strokeStyle = '#333';
-
 	const interval = window_interval(canvas, zoom, pan);
-	draw_function_times(interval, ctx, zoom, pan, draw);
-	draw_overhead_times(interval, ctx, zoom, pan, draw);
 	draw_parallel_regions(interval, ctx, zoom, pan, draw);
+	const sel_overhead = draw_overhead_times(interval, ctx, zoom, pan, draw);
+	if (sel_overhead) {
+		draw_tooltip(ctx, zoom, pan, sel_overhead);
+	}
+	const sel_func_time = draw_function_times(interval, ctx, zoom, pan, draw);
+	if (sel_func_time) {
+		draw_tooltip(ctx, zoom, pan, sel_func_time);
+	}
 }
 
 export function update_canvas(canvas: any, zoom: ZoomData, pan: PanData, draw: DrawData) {
