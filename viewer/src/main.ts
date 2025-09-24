@@ -37,6 +37,7 @@ import { DrawData } from './models/DrawData';
 import { make_draw_data } from './parse_json';
 import { render_fitted_text } from './rendering';
 import { DimensionConfiguration } from './models/Config';
+import { window_interval } from './utils';
 
 let canvas: any = undefined;
 
@@ -61,7 +62,7 @@ let start_mouse_y: number;
 
 // Data to display
 let last_selected_rect: Rectangle | undefined;
-let draw_data: DrawData = new DrawData([], [], [], []);
+let draw_data: DrawData = new DrawData([], [], [], [], []);
 
 function reset_zoom_and_pan_data() {
 	zoom = 1;
@@ -100,7 +101,7 @@ window.onload = function () {
 			const delta = e.deltaY < 0 ? SCALE_X_STEP : -SCALE_X_STEP;
 			scale_x = Math.max(SCALE_X_MIN, Math.min(SCALE_X_MAX, scale_x + delta));
 
-			render_fitted_text(ctx, make_zoom_data(), draw_data);
+			render_fitted_text(canvas, ctx, make_zoom_data(), make_pan_data(), draw_data);
 
 			let scale_x_label = document.getElementById('width_scale') as HTMLSpanElement;
 			scale_x_label.textContent = `Width scaling: ${(1 + scale_x).toFixed(1)}`;
@@ -125,7 +126,10 @@ window.onload = function () {
 		const mouse_x = mx - pan_x;
 		const mouse_y = my - DimensionConfiguration.RULER_HEIGHT - pan_y;
 
-		const selected_rect = draw_data.rectangles.find((r: Rectangle) => {
+		const interval = window_interval(canvas, make_zoom_data(), make_pan_data());
+
+		let rects = draw_data.tree_function_time.search(interval);
+		const selected_rect = rects.find((r: Rectangle) => {
 			const xx = r.x * (1 + scale_x);
 			const yy = r.y;
 			const ww = r.width * (1 + scale_x);
@@ -179,9 +183,10 @@ window.onload = function () {
 			session_id.textContent = json_data.session_id;
 
 			const zoom = make_zoom_data();
-			draw_data = make_draw_data(canvas, json_data, zoom);
+			const pan = make_pan_data();
+			draw_data = make_draw_data(canvas, json_data, zoom, pan);
 
-			update_canvas(canvas, zoom, make_pan_data(), draw_data);
+			update_canvas(canvas, zoom, pan, draw_data);
 		});
 	});
 
@@ -195,8 +200,10 @@ window.onload = function () {
 		let zoom_label = document.getElementById('zoom_level') as HTMLSpanElement;
 		zoom_label.textContent = `Zoom: ${Math.round(zoom * 100)}%`;
 
-		render_fitted_text(ctx, make_zoom_data(), draw_data);
-		update_canvas(canvas, make_zoom_data(), make_pan_data(), draw_data);
+		const zoom_data = make_zoom_data();
+		const pan_data = make_pan_data();
+		render_fitted_text(canvas, ctx, zoom_data, pan_data, draw_data);
+		update_canvas(canvas, zoom_data, pan_data, draw_data);
 	};
 
 	// Initial draw

@@ -30,6 +30,7 @@
 
 import { DimensionConfiguration } from './models/Config';
 import { DrawData } from './models/DrawData';
+import { PanData } from './models/PanData';
 import { Rectangle, RectangleBorder, RectangleInfo } from './models/Rectangle';
 import { ZoomData } from './models/ZoomData';
 import { render_fitted_text, render_ticks } from './rendering';
@@ -43,30 +44,30 @@ function is_parallel(data: any): boolean {
 
 export function make_rectangles(
 	ctx: CanvasRenderingContext2D,
-	data: any,
+	json_data: any,
 	start_y: number,
 	scale: (t: number) => number
-): [Rectangle[], RectangleBorder[], number] {
-	const x_bprof = scale(data.pb);
-	const w_bprof = scale(data.b) - x_bprof;
+): [Rectangle[], Rectangle[], RectangleBorder[], number] {
+	const x_bprof = scale(json_data.pb);
+	const w_bprof = scale(json_data.b) - x_bprof;
 
-	const x = scale(data.b);
+	const x = scale(json_data.b);
 	const y = start_y;
-	const w = scale(data.e) - x;
+	const w = scale(json_data.e) - x;
 	const h = RECT_HEIGHT;
 
 	const x_eprof = x + w;
-	const w_eprof = scale(data.pe) - x_eprof;
+	const w_eprof = scale(json_data.pe) - x_eprof;
 
-	const N = data.c.length;
+	const N = json_data.c.length;
 
-	let rectangles: Rectangle[] = [
+	let overhead_times: Rectangle[] = [
 		new Rectangle(
 			x_bprof,
 			y + 5,
 			w_bprof,
 			h - 10,
-			new RectangleInfo(data.n, 'Profiler overhead time', data.l, ''),
+			new RectangleInfo(json_data.n, 'Profiler overhead time', json_data.l, ''),
 			'#0000ff'
 		),
 		new Rectangle(
@@ -74,10 +75,12 @@ export function make_rectangles(
 			y + 5,
 			w_eprof,
 			h - 10,
-			new RectangleInfo(data.n, 'Profiler overhead time', data.l, ''),
+			new RectangleInfo(json_data.n, 'Profiler overhead time', json_data.l, ''),
 			'#ff0000'
-		),
-		new Rectangle(x, y, w, h, new RectangleInfo(data.n, data.t, data.l, ''))
+		)
+	];
+	let function_times: Rectangle[] = [
+		new Rectangle(x, y, w, h, new RectangleInfo(json_data.n, json_data.t, json_data.l, ''))
 	];
 	let par_regions: RectangleBorder[] = [];
 
@@ -85,35 +88,32 @@ export function make_rectangles(
 	let next_y: number = start_y + RECT_HEIGHT + 5;
 
 	for (let i = 0; i < N; ++i) {
-		let rects: Rectangle[];
-		let rect_borders: RectangleBorder[];
-		let sub_max_y: number;
-
-		[rects, rect_borders, sub_max_y] = make_rectangles(ctx, data.c[i], next_y, scale);
-		if (is_parallel(data)) {
+		let [times, overheads, rect_borders, sub_max_y] = make_rectangles(ctx, json_data.c[i], next_y, scale);
+		if (is_parallel(json_data)) {
 			next_y = sub_max_y + RECT_HEIGHT;
 		}
 
 		max_y = Math.max(sub_max_y, max_y);
 
-		rectangles = rectangles.concat(rects);
+		function_times = function_times.concat(times);
+		overhead_times = overhead_times.concat(overheads);
 		par_regions = par_regions.concat(rect_borders);
 	}
 
-	if (is_parallel(data)) {
+	if (is_parallel(json_data)) {
 		par_regions.push(new RectangleBorder(x, y + RECT_HEIGHT + 2.5, w, max_y - start_y, '#ff00d4ff'));
 	}
 
-	return [rectangles, par_regions, max_y];
+	return [function_times, overhead_times, par_regions, max_y];
 }
 
-export function make_draw_data(canvas: any, json_data: any, zoom: ZoomData): DrawData {
+export function make_draw_data(canvas: any, json_data: any, zoom: ZoomData, pan: PanData): DrawData {
 	let ctx = canvas.getContext('2d')!;
 
 	// Set this to the context so that the width of a text is calculated properly.
 	ctx.font = '16px sans-serif';
 
-	let draw_data: DrawData = new DrawData([], [], [], []);
+	let draw_data: DrawData = new DrawData([], [], [], [], []);
 
 	const W = canvas.width;
 
@@ -125,15 +125,19 @@ export function make_draw_data(canvas: any, json_data: any, zoom: ZoomData): Dra
 		return ((t - min_time) / (max_time - min_time)) * W;
 	};
 
-	draw_data.rectangles = [];
+	draw_data.function_time = [];
+	draw_data.overhead_time = [];
 	for (let i = 0; i < N; ++i) {
-		const [rects, rect_borders, _] = make_rectangles(ctx, json_data.functions[i], RULER_HEIGHT, scale);
-		draw_data.rectangles = draw_data.rectangles.concat(rects);
+		const [times, overheads, rect_borders, _] = make_rectangles(ctx, json_data.functions[i], RULER_HEIGHT, scale);
+		draw_data.function_time = draw_data.function_time.concat(times);
+		draw_data.overhead_time = draw_data.overhead_time.concat(overheads);
 		draw_data.parallel_regions = draw_data.parallel_regions.concat(rect_borders);
 	}
 
+	draw_data.init_trees();
+
 	render_ticks(min_time, max_time, scale, zoom, draw_data);
-	render_fitted_text(ctx, zoom, draw_data);
+	render_fitted_text(canvas, ctx, zoom, pan, draw_data);
 
 	return draw_data;
 }

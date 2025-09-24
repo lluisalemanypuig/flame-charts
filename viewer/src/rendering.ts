@@ -30,8 +30,10 @@
 
 import { DimensionConfiguration } from './models/Config';
 import { DrawData } from './models/DrawData';
+import { PanData } from './models/PanData';
 import { Rectangle } from './models/Rectangle';
 import { ZoomData } from './models/ZoomData';
+import { window_interval } from './utils';
 
 const ETC_TEXT = DimensionConfiguration.ETC_TEXT;
 
@@ -52,8 +54,17 @@ function fit_text_to_width(ctx: CanvasRenderingContext2D, text: string, etc: str
 	return '';
 }
 
-export function render_fitted_text(ctx: CanvasRenderingContext2D, zoom: ZoomData, draw_data: DrawData) {
-	draw_data.rectangles.forEach((r: Rectangle) => {
+export function render_fitted_text(
+	canvas: any,
+	ctx: CanvasRenderingContext2D,
+	zoom: ZoomData,
+	pan: PanData,
+	draw: DrawData
+) {
+	const interval = window_interval(canvas, zoom, pan);
+
+	let rects = draw.tree_function_time.search(interval);
+	rects.forEach((r: Rectangle) => {
 		if (r.width * (1 + zoom.scale_x) > 30) {
 			r.info.fitted_text = fit_text_to_width(
 				ctx,
@@ -72,14 +83,14 @@ export function render_ticks(
 	max_time: number,
 	scale: (t: number) => number,
 	_zoom: ZoomData,
-	draw_data: DrawData
+	draw: DrawData
 ) {
 	// make ticks
 	const L = (max_time - min_time) / 10;
 	for (let i = 0; i < 10; ++i) {
-		draw_data.ruler_tick_positions.push(scale(L * i));
-		draw_data.ruler_tick_labels.push(Math.round(L * i).toString());
+		draw.ruler_tick_positions.push(scale(L * i));
+		draw.ruler_tick_labels.push(Math.round(L * i).toString());
 	}
-	draw_data.ruler_tick_positions.push(scale(max_time));
-	draw_data.ruler_tick_labels.push(Math.round(max_time).toString());
+	draw.ruler_tick_positions.push(scale(max_time));
+	draw.ruler_tick_labels.push(Math.round(max_time).toString());
 }

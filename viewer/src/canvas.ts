@@ -33,6 +33,7 @@ import { ZoomData } from './models/ZoomData';
 import { PanData } from './models/PanData';
 import { DrawData } from './models/DrawData';
 import { DimensionConfiguration } from './models/Config';
+import { intersect, window_interval } from './utils';
 
 const RULER_HEIGHT = DimensionConfiguration.RULER_HEIGHT;
 const RECT_HEIGHT = DimensionConfiguration.RECT_HEIGHT;
@@ -42,7 +43,7 @@ function draw_ruler(
 	ctx: CanvasRenderingContext2D,
 	zoom: ZoomData,
 	pan: PanData,
-	draw_data: DrawData
+	draw: DrawData
 ) {
 	// Ruler background
 	//ctx.save();
@@ -61,14 +62,14 @@ function draw_ruler(
 	ctx.font = '12px sans-serif';
 	ctx.fillStyle = '#000000';
 
-	for (let i = 0; i < draw_data.ruler_tick_positions.length; ++i) {
+	for (let i = 0; i < draw.ruler_tick_positions.length; ++i) {
 		// Map time to pixel position
-		const x = draw_data.ruler_tick_positions[i] * (1 + zoom.scale_x) + pan.x;
+		const x = draw.ruler_tick_positions[i] * (1 + zoom.scale_x) + pan.x;
 
 		// Tick label
 		ctx.textAlign = 'left';
 		ctx.textBaseline = 'top';
-		ctx.fillText(draw_data.ruler_tick_labels[i], x + 2, RULER_HEIGHT - 16);
+		ctx.fillText(draw.ruler_tick_labels[i], x + 2, RULER_HEIGHT - 16);
 
 		// Tick line
 		ctx.strokeStyle = '#000000ff';
@@ -120,14 +121,17 @@ function draw_tooltip(ctx: CanvasRenderingContext2D, zoom: ZoomData, pan: PanDat
 	}
 }
 
-function draw_rectangles(ctx: CanvasRenderingContext2D, zoom: ZoomData, pan: PanData, draw_data: DrawData) {
-	ctx.font = '16px sans-serif';
-	ctx.strokeStyle = '#333';
-
+function draw_function_times(
+	interval: [number, number],
+	ctx: CanvasRenderingContext2D,
+	zoom: ZoomData,
+	pan: PanData,
+	draw: DrawData
+) {
 	let selected_rect: Rectangle | undefined;
 
-	// TODO: iterate only through the rectangles in the viewport
-	draw_data.rectangles.forEach((rect: Rectangle) => {
+	const rects = draw.tree_function_time.search(interval);
+	rects.forEach((rect: Rectangle) => {
 		const x = rect.x * (1 + zoom.scale_x) + pan.x;
 		const y = rect.y + pan.y;
 
@@ -154,37 +158,86 @@ function draw_rectangles(ctx: CanvasRenderingContext2D, zoom: ZoomData, pan: Pan
 	}
 }
 
-function draw_parallel_regions(ctx: CanvasRenderingContext2D, zoom: ZoomData, pan: PanData, draw_data: DrawData) {
-	// TODO: iterate only through the rectangles in the viewport
-	draw_data.parallel_regions.forEach((par_region: RectangleBorder) => {
+function draw_overhead_times(
+	interval: [number, number],
+	ctx: CanvasRenderingContext2D,
+	zoom: ZoomData,
+	pan: PanData,
+	draw: DrawData
+) {
+	let selected_rect: Rectangle | undefined;
+
+	const rects = draw.tree_overhead_time.search(interval);
+	rects.forEach((rect: Rectangle) => {
+		const x = rect.x * (1 + zoom.scale_x) + pan.x;
+		const y = rect.y + pan.y;
+
+		const w = rect.width * (1 + zoom.scale_x);
+		const h = rect.height;
+
+		ctx.fillStyle = rect.color;
+		ctx.fillRect(x, y, w, h);
+		ctx.strokeRect(x, y, w, h);
+
+		if (rect.selected) {
+			selected_rect = rect;
+		}
+	});
+
+	// Draw tooltip if a rectangle is selected
+	if (selected_rect) {
+		draw_tooltip(ctx, zoom, pan, selected_rect);
+	}
+}
+
+function draw_parallel_regions(
+	interval: [number, number],
+	ctx: CanvasRenderingContext2D,
+	zoom: ZoomData,
+	pan: PanData,
+	draw: DrawData
+) {
+	const rects = draw.tree_function_time.search(interval);
+	rects.forEach((par_region: RectangleBorder) => {
 		const x = par_region.x * (1 + zoom.scale_x) + pan.x;
 		const y = par_region.y + pan.y;
 
 		const w = par_region.width * (1 + zoom.scale_x);
 		const h = par_region.height;
 
-		ctx.strokeStyle = par_region.color;
-		ctx.strokeRect(x, y, w, h);
+		if (intersect(interval[0], interval[1], x, x + w)) {
+			ctx.strokeStyle = par_region.color;
+			ctx.strokeRect(x, y, w, h);
+		}
 	});
 }
 
-export function update_canvas(canvas: any, zoom: ZoomData, pan: PanData, draw_data: DrawData) {
+function draw_times(canvas: any, ctx: CanvasRenderingContext2D, zoom: ZoomData, pan: PanData, draw: DrawData) {
+	ctx.font = '16px sans-serif';
+	ctx.strokeStyle = '#333';
+
+	const interval = window_interval(canvas, zoom, pan);
+	draw_function_times(interval, ctx, zoom, pan, draw);
+	draw_overhead_times(interval, ctx, zoom, pan, draw);
+	draw_parallel_regions(interval, ctx, zoom, pan, draw);
+}
+
+export function update_canvas(canvas: any, zoom: ZoomData, pan: PanData, draw: DrawData) {
 	const ctx = canvas.getContext('2d')!;
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	ctx.save();
 
 	ctx.scale(zoom.value, zoom.value);
 
-	draw_parallel_regions(ctx, zoom, pan, draw_data);
-	draw_rectangles(ctx, zoom, pan, draw_data);
-	draw_ruler(canvas, ctx, zoom, pan, draw_data);
+	draw_times(canvas, ctx, zoom, pan, draw);
+	draw_ruler(canvas, ctx, zoom, pan, draw);
 
 	ctx.restore();
 }
 
-export function resize_canvas(canvas: any, zoom: ZoomData, pan: PanData, draw_data: DrawData) {
+export function resize_canvas(canvas: any, zoom: ZoomData, pan: PanData, draw: DrawData) {
 	const container = document.getElementById('display-container')!;
 	canvas.width = container.clientWidth;
 	canvas.height = container.clientHeight;
-	update_canvas(canvas, zoom, pan, draw_data);
+	update_canvas(canvas, zoom, pan, draw);
 }
