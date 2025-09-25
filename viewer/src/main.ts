@@ -35,9 +35,11 @@ import { PanData } from './models/PanData';
 import { Rectangle } from './models/Rectangle';
 import { DrawData } from './models/DrawData';
 import { make_draw_data } from './parse_json';
-import { render_fitted_text } from './rendering';
+import { make_function_labels } from './rendering';
 import { DimensionConfiguration } from './models/Config';
 import { window_interval } from './utils';
+
+const WIDTH_FACTOR = DimensionConfiguration.WIDTH_FACTOR;
 
 let canvas: any = undefined;
 
@@ -89,9 +91,9 @@ window.onload = function () {
 	reset_zoom_and_pan_data();
 
 	window.addEventListener('resize', () => {
-		resize_canvas(canvas, make_zoom_data(), make_pan_data(), draw_data);
+		resize_canvas(canvas, ctx, make_zoom_data(), make_pan_data(), draw_data);
 	});
-	resize_canvas(canvas, make_zoom_data(), make_pan_data(), draw_data);
+	resize_canvas(canvas, ctx, make_zoom_data(), make_pan_data(), draw_data);
 
 	let width_scale_input = document.getElementById('width_scale_input') as HTMLInputElement;
 	width_scale_input.addEventListener('change', (event: any) => {
@@ -99,15 +101,15 @@ window.onload = function () {
 		if (!isNaN(value)) {
 			scale_x = Math.max(SCALE_X_MIN, Math.min(SCALE_X_MAX, value));
 
-			render_fitted_text(canvas, ctx, make_zoom_data(), make_pan_data(), draw_data);
-			update_canvas(canvas, make_zoom_data(), make_pan_data(), draw_data);
+			make_function_labels(canvas, ctx, make_zoom_data(), make_pan_data(), draw_data);
+			update_canvas(canvas, ctx, make_zoom_data(), make_pan_data(), draw_data);
 		}
 	});
 
 	let render_fitted_text_button = document.getElementById('render_fitted_text') as HTMLButtonElement;
 	render_fitted_text_button.addEventListener('click', () => {
-		render_fitted_text(canvas, ctx, make_zoom_data(), make_pan_data(), draw_data);
-		update_canvas(canvas, make_zoom_data(), make_pan_data(), draw_data);
+		make_function_labels(canvas, ctx, make_zoom_data(), make_pan_data(), draw_data);
+		update_canvas(canvas, ctx, make_zoom_data(), make_pan_data(), draw_data);
 	});
 
 	// Ctrl + Wheel // Wheel
@@ -118,7 +120,7 @@ window.onload = function () {
 			const delta = e.deltaY < 0 ? SCALE_X_STEP : -SCALE_X_STEP;
 			scale_x = Math.max(SCALE_X_MIN, Math.min(SCALE_X_MAX, scale_x + delta));
 
-			render_fitted_text(canvas, ctx, make_zoom_data(), make_pan_data(), draw_data);
+			make_function_labels(canvas, ctx, make_zoom_data(), make_pan_data(), draw_data);
 			width_scale_input.value = scale_x.toFixed(1);
 		} else {
 			// Regular wheel zoom
@@ -129,7 +131,7 @@ window.onload = function () {
 			zoom_label.textContent = `Zoom: ${Math.round(zoom * 100)}%`;
 		}
 
-		update_canvas(canvas, make_zoom_data(), make_pan_data(), draw_data);
+		update_canvas(canvas, ctx, make_zoom_data(), make_pan_data(), draw_data);
 	});
 
 	// click
@@ -145,9 +147,9 @@ window.onload = function () {
 
 		let rects = draw_data.tree_function_time.search(interval);
 		const selected_rect = rects.find((r: Rectangle) => {
-			const xx = r.x * scale_x;
+			const xx = (r.x / WIDTH_FACTOR) * scale_x;
 			const yy = r.y;
-			const ww = r.width * scale_x;
+			const ww = (r.width / WIDTH_FACTOR) * scale_x;
 			const hh = r.height;
 			return xx <= mouse_x && mouse_x <= xx + ww && yy <= mouse_y && mouse_y <= yy + hh;
 		});
@@ -160,7 +162,7 @@ window.onload = function () {
 		}
 		last_selected_rect = selected_rect;
 
-		update_canvas(canvas, make_zoom_data(), make_pan_data(), draw_data);
+		update_canvas(canvas, ctx, make_zoom_data(), make_pan_data(), draw_data);
 	});
 
 	// Mouse pan
@@ -179,7 +181,7 @@ window.onload = function () {
 		if (is_panning) {
 			pan_x = start_pan_x + (e.clientX - start_mouse_x) / zoom;
 			pan_y = start_pan_y + (e.clientY - start_mouse_y) / zoom;
-			update_canvas(canvas, make_zoom_data(), make_pan_data(), draw_data);
+			update_canvas(canvas, ctx, make_zoom_data(), make_pan_data(), draw_data);
 		}
 	});
 	window.addEventListener('mouseup', () => {
@@ -201,7 +203,7 @@ window.onload = function () {
 			const pan = make_pan_data();
 			draw_data = make_draw_data(canvas, json_data, zoom, pan);
 
-			update_canvas(canvas, zoom, pan, draw_data);
+			update_canvas(canvas, ctx, zoom, pan, draw_data);
 		});
 	});
 
@@ -216,10 +218,10 @@ window.onload = function () {
 
 		const zoom_data = make_zoom_data();
 		const pan_data = make_pan_data();
-		render_fitted_text(canvas, ctx, zoom_data, pan_data, draw_data);
-		update_canvas(canvas, zoom_data, pan_data, draw_data);
+		make_function_labels(canvas, ctx, zoom_data, pan_data, draw_data);
+		update_canvas(canvas, ctx, zoom_data, pan_data, draw_data);
 	};
 
 	// Initial draw
-	update_canvas(canvas, make_zoom_data(), make_pan_data(), draw_data);
+	update_canvas(canvas, ctx, make_zoom_data(), make_pan_data(), draw_data);
 };

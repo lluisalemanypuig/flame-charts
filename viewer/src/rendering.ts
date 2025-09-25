@@ -54,7 +54,7 @@ function fit_text_to_width(ctx: CanvasRenderingContext2D, text: string, etc: str
 	return '';
 }
 
-export function render_fitted_text(
+export function make_function_labels(
 	canvas: any,
 	ctx: CanvasRenderingContext2D,
 	zoom: ZoomData,
@@ -65,12 +65,12 @@ export function render_fitted_text(
 
 	let rects = draw.tree_function_time.search(interval);
 	rects.forEach((r: Rectangle) => {
-		if (r.width * zoom.scale_x > 30) {
+		if ((r.width / DimensionConfiguration.WIDTH_FACTOR) * zoom.scale_x > 30) {
 			r.info.fitted_text = fit_text_to_width(
 				ctx,
 				`${r.info.name} :: ${r.info.type}`,
 				ETC_TEXT,
-				r.width * zoom.scale_x - 7
+				(r.width / DimensionConfiguration.WIDTH_FACTOR) * zoom.scale_x - 7
 			);
 		} else {
 			r.info.fitted_text = '';
@@ -78,7 +78,7 @@ export function render_fitted_text(
 	});
 }
 
-export function render_ticks(
+export function make_ticks(
 	min_time: number,
 	max_time: number,
 	scale: (t: number) => number,

@@ -33,10 +33,11 @@ import { DrawData } from './models/DrawData';
 import { PanData } from './models/PanData';
 import { Rectangle, RectangleBorder, RectangleInfo } from './models/Rectangle';
 import { ZoomData } from './models/ZoomData';
-import { render_fitted_text, render_ticks } from './rendering';
+import { make_function_labels, make_ticks } from './rendering';
 
 const RECT_HEIGHT = DimensionConfiguration.RECT_HEIGHT;
 const RULER_HEIGHT = DimensionConfiguration.RULER_HEIGHT;
+const WIDTH_FACTOR = DimensionConfiguration.WIDTH_FACTOR;
 
 function is_parallel(data: any): boolean {
 	return data.t.startsWith('parallel_');
@@ -112,7 +113,7 @@ export function make_draw_data(canvas: any, json_data: any, zoom: ZoomData, pan:
 
 	let draw_data: DrawData = new DrawData([], [], [], [], []);
 
-	const W = canvas.width;
+	const W = canvas.width * WIDTH_FACTOR;
 
 	const N = json_data.functions.length;
 	const min_time = json_data.functions[0].b;
@@ -134,8 +135,8 @@ export function make_draw_data(canvas: any, json_data: any, zoom: ZoomData, pan:
 
 	// Set this to the context so that the width of a text is calculated properly.
 	ctx.font = '16px sans-serif';
-	render_ticks(min_time, max_time, scale, zoom, draw_data);
-	render_fitted_text(canvas, ctx, zoom, pan, draw_data);
+	make_ticks(min_time, max_time, scale, zoom, draw_data);
+	make_function_labels(canvas, ctx, zoom, pan, draw_data);
 
 	return draw_data;
 }

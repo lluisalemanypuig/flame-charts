@@ -32,4 +32,5 @@ export class DimensionConfiguration {
 	public static RULER_HEIGHT: number = 20;
 	public static RECT_HEIGHT: number = 20;
 	public static ETC_TEXT: string = '...';
+	public static WIDTH_FACTOR: number = 100;
 }
