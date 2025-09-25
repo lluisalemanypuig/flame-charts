@@ -1,9 +1,9 @@
 import { PanData } from './models/PanData';
 import { ZoomData } from './models/ZoomData';
 
-export function window_interval(canvas: any, _zoom: ZoomData, pan: PanData): [number, number] {
+export function window_interval(canvas: any, zoom: ZoomData, pan: PanData): [number, number] {
 	const W = canvas.width;
-	return [-pan.x / (1 + _zoom.scale_x), (W - pan.x) / (1 + _zoom.scale_x)];
+	return [-pan.x / zoom.scale_x, (W - pan.x) / zoom.scale_x];
 }
 
 export function intersect(p: number, q: number, s: number, t: number): boolean {

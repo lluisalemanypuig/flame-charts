@@ -64,7 +64,7 @@ function draw_ruler(
 
 	for (let i = 0; i < draw.ruler_tick_positions.length; ++i) {
 		// Map time to pixel position
-		const x = draw.ruler_tick_positions[i] * (1 + zoom.scale_x) + pan.x;
+		const x = draw.ruler_tick_positions[i] * zoom.scale_x + pan.x;
 
 		// Tick label
 		ctx.textAlign = 'left';
@@ -97,7 +97,7 @@ function draw_tooltip(ctx: CanvasRenderingContext2D, zoom: ZoomData, pan: PanDat
 	}
 
 	const tooltip_height = 5 + lines.length * (14 + 5) + 5;
-	const tooltip_x = Math.max(0, rect.x * (1 + zoom.scale_x) + pan.x);
+	const tooltip_x = Math.max(0, rect.x * zoom.scale_x + pan.x);
 	const tooltip_y = rect.y + pan.y;
 
 	// Draw tooltip background
@@ -133,10 +133,10 @@ function draw_function_times(
 
 	const rects = draw.tree_function_time.search(interval);
 	rects.forEach((rect: Rectangle) => {
-		const x = rect.x * (1 + zoom.scale_x) + pan.x;
+		const x = rect.x * zoom.scale_x + pan.x;
 		const y = rect.y + pan.y;
 
-		const w = rect.width * (1 + zoom.scale_x);
+		const w = rect.width * zoom.scale_x;
 		const h = rect.height;
 
 		ctx.fillStyle = rect.color;
@@ -169,10 +169,10 @@ function draw_overhead_times(
 
 	const rects = draw.tree_overhead_time.search(interval);
 	rects.forEach((rect: Rectangle) => {
-		const x = rect.x * (1 + zoom.scale_x) + pan.x;
+		const x = rect.x * zoom.scale_x + pan.x;
 		const y = rect.y + pan.y;
 
-		const w = rect.width * (1 + zoom.scale_x);
+		const w = rect.width * zoom.scale_x;
 		const h = rect.height;
 
 		ctx.fillStyle = rect.color;
@@ -197,10 +197,10 @@ function draw_parallel_regions(
 ) {
 	const rects = draw.tree_function_time.search(interval);
 	rects.forEach((par_region: RectangleBorder) => {
-		const x = par_region.x * (1 + zoom.scale_x) + pan.x;
+		const x = par_region.x * zoom.scale_x + pan.x;
 		const y = par_region.y + pan.y;
 
-		const w = par_region.width * (1 + zoom.scale_x);
+		const w = par_region.width * zoom.scale_x;
 		const h = par_region.height;
 
 		if (intersect(interval[0], interval[1], x, x + w)) {

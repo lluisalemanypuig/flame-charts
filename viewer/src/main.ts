@@ -46,9 +46,9 @@ let zoom: number;
 const ZOOM_STEP = 0.1;
 const ZOOM_MIN = 0.2;
 const ZOOM_MAX = 10;
-let scale_x: number = 0;
+let scale_x: number = 1;
 const SCALE_X_STEP = 0.1;
-const SCALE_X_MIN = 0;
+const SCALE_X_MIN = 1;
 const SCALE_X_MAX = 100;
 
 // Pan state
@@ -66,7 +66,7 @@ let draw_data: DrawData = new DrawData([], [], [], [], []);
 
 function reset_zoom_and_pan_data() {
 	zoom = 1;
-	scale_x = 0;
+	scale_x = 1;
 	pan_x = 0;
 	pan_y = 0;
 	is_panning = false;
@@ -93,6 +93,23 @@ window.onload = function () {
 	});
 	resize_canvas(canvas, make_zoom_data(), make_pan_data(), draw_data);
 
+	let width_scale_input = document.getElementById('width_scale_input') as HTMLInputElement;
+	width_scale_input.addEventListener('change', (event: any) => {
+		const value = Number(event.target.value);
+		if (!isNaN(value)) {
+			scale_x = Math.max(SCALE_X_MIN, Math.min(SCALE_X_MAX, value));
+
+			render_fitted_text(canvas, ctx, make_zoom_data(), make_pan_data(), draw_data);
+			update_canvas(canvas, make_zoom_data(), make_pan_data(), draw_data);
+		}
+	});
+
+	let render_fitted_text_button = document.getElementById('render_fitted_text') as HTMLButtonElement;
+	render_fitted_text_button.addEventListener('click', () => {
+		render_fitted_text(canvas, ctx, make_zoom_data(), make_pan_data(), draw_data);
+		update_canvas(canvas, make_zoom_data(), make_pan_data(), draw_data);
+	});
+
 	// Ctrl + Wheel // Wheel
 	canvas.addEventListener('wheel', (e: WheelEvent) => {
 		e.preventDefault();
@@ -102,9 +119,7 @@ window.onload = function () {
 			scale_x = Math.max(SCALE_X_MIN, Math.min(SCALE_X_MAX, scale_x + delta));
 
 			render_fitted_text(canvas, ctx, make_zoom_data(), make_pan_data(), draw_data);
-
-			let scale_x_label = document.getElementById('width_scale') as HTMLSpanElement;
-			scale_x_label.textContent = `Width scaling: ${(1 + scale_x).toFixed(1)}`;
+			width_scale_input.value = scale_x.toFixed(1);
 		} else {
 			// Regular wheel zoom
 			const delta = e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP;
@@ -130,9 +145,9 @@ window.onload = function () {
 
 		let rects = draw_data.tree_function_time.search(interval);
 		const selected_rect = rects.find((r: Rectangle) => {
-			const xx = r.x * (1 + scale_x);
+			const xx = r.x * scale_x;
 			const yy = r.y;
-			const ww = r.width * (1 + scale_x);
+			const ww = r.width * scale_x;
 			const hh = r.height;
 			return xx <= mouse_x && mouse_x <= xx + ww && yy <= mouse_y && mouse_y <= yy + hh;
 		});
@@ -194,8 +209,7 @@ window.onload = function () {
 	reset_view.onclick = () => {
 		reset_zoom_and_pan_data();
 
-		let zoom_level = document.getElementById('width_scale') as HTMLSpanElement;
-		zoom_level.textContent = `Width scaling: ${(1 + scale_x).toFixed(1)}`;
+		width_scale_input.value = scale_x.toFixed(1);
 
 		let zoom_label = document.getElementById('zoom_level') as HTMLSpanElement;
 		zoom_label.textContent = `Zoom: ${Math.round(zoom * 100)}%`;

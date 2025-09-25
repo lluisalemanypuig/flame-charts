@@ -48,8 +48,10 @@ Contact:
 		</div>
 		<div id="toolbar">
 			<button id="reset_view">Reset view</button>
-			<span id="width_scale">Width scaling: 1</span>
+			<label for="width_scale_input">Width scaling:</label>
+			<input type="number" id="width_scale_input" step="0.1" min="1" max="100" value="1" style="width: 60px" />
 			<span id="zoom_level">Zoom: 100%</span>
+			<button id="render_fitted_text">Render labels</button>
 		</div>
 	</body>
 </html>
