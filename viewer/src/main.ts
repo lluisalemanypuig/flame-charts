@@ -51,7 +51,7 @@ const ZOOM_MAX = 10;
 let scale_x: number = 1;
 const SCALE_X_STEP = 0.1;
 const SCALE_X_MIN = 1;
-const SCALE_X_MAX = 100;
+const SCALE_X_MAX = 9999999;
 
 // Pan state
 let pan_x: number;
