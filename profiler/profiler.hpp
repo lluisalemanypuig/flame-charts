@@ -34,6 +34,7 @@
 #if defined DEBUG
 #include <cassert>
 #endif
+#include <source_location>
 #include <fstream>
 #include <chrono>
 #include <vector>
@@ -181,18 +182,12 @@ private:
 class timer {
 public:
 
-	timer() = default;
 	timer(const timer&) = default;
 	timer(timer&&) = default;
 	timer& operator= (const timer&) = default;
 	timer& operator= (timer&&) = default;
 
-	virtual ~timer()
-	{
-		end();
-	}
-
-	inline void start(
+	timer(
 		const std::string_view func_name,
 		const int line,
 		const detail::profiler_type current_type,
@@ -241,7 +236,7 @@ public:
 		m_begin = detail::now();
 	}
 
-	inline void end() const
+	~timer()
 	{
 		const detail::time_point end = detail::now();
 
@@ -254,7 +249,7 @@ public:
 			last.mutex->unlock();
 		}
 
-		const detail::time_point pend = detail::now();
+		const detail::time_point profile_end = detail::now();
 		s.fout << "],\"n\":\"" << m_function_name << "\",\"ti\":\""
 			   << std::this_thread::get_id() << "\",\"t\":\""
 			   << detail::profiler_type_to_string(m_type) << "\",\"l\":\""
@@ -262,7 +257,7 @@ public:
 			   << "\",\"pb\":" << s.get_time_since_entry(m_profile_begin)
 			   << ",\"b\":" << s.get_time_since_entry(m_begin)
 			   << ",\"e\":" << s.get_time_since_entry(end)
-			   << ",\"pe\":" << s.get_time_since_entry(pend) << '}';
+			   << ",\"pe\":" << s.get_time_since_entry(profile_end) << '}';
 	}
 
 protected:
@@ -281,39 +276,40 @@ protected:
 
 #define PROFILER_END_SESSION() logger::session::get_instance().end()
 
-#define VAR_NAME(line) timer##line
+#define VAR_NAME_IMPL(name, counter) name##counter
+#define VAR_NAME(counter) VAR_NAME_IMPL(timer, counter)
 
 // sequential timer
 
-#define PROFILE_OBJECT(name, line, type)                                       \
-	profiler::timer VAR_NAME(line);                                            \
-	VAR_NAME(line).start(name, __LINE__, type)
+#define PROFILE_OBJECT(name, type)                                             \
+	profiler::timer VAR_NAME(__COUNTER__)(                                     \
+		name, std::source_location::current().line(), type                     \
+	)
 
 #define PROFILE_SCOPE(name)                                                    \
-	PROFILE_OBJECT(name, __LINE__, profiler::detail::profiler_type::scope)
+	PROFILE_OBJECT(name, profiler::detail::profiler_type::scope)
 
 #define PROFILE_FUNCTION                                                       \
 	PROFILE_OBJECT(                                                            \
-		__PRETTY_FUNCTION__,                                                   \
-		__LINE__,                                                              \
+		std::source_location::current().function_name(),                       \
 		profiler::detail::profiler_type::function                              \
 	)
 
 // parallel timer
 
-#define PROFILE_PARALLEL_OBJECT(name, line, type, num_threads)                 \
-	profiler::timer VAR_NAME(line);                                            \
-	VAR_NAME(line).start(name, __LINE__, type, num_threads)
+#define PROFILE_PARALLEL_OBJECT(name, type, num_threads)                       \
+	profiler::timer VAR_NAME(__COUNTER__)(                                     \
+		name, std::source_location::current().line(), type, num_threads        \
+	)
 
 #define PROFILE_PARALLEL_SCOPE(name, N)                                        \
 	PROFILE_PARALLEL_OBJECT(                                                   \
-		name, __LINE__, profiler::detail::profiler_type::parallel_scope, N     \
+		name, profiler::detail::profiler_type::parallel_scope, N               \
 	)
 
 #define PROFILE_PARALLEL_FUNCTION(N)                                           \
 	PROFILE_PARALLEL_OBJECT(                                                   \
-		__PRETTY_FUNCTION__,                                                   \
-		__LINE__,                                                              \
+		std::source_location::current().function_name(),                       \
 		profiler::detail::profiler_type::parallel_function,                    \
 		N                                                                      \
 	)
