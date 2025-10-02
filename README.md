@@ -1,6 +1,6 @@
 # Flame Charts
 
-This repository is an instrumentator for C++ projects to produce profiling traces and display them as flame charts.
+This repository is an instrumentator for C++20 projects to produce profiling traces and display them as flame charts.
 
 ## Use them in your C++ projects
 
