@@ -196,7 +196,7 @@ function draw_parallel_regions(
 	pan: PanData,
 	draw: DrawData
 ) {
-	const rects = draw.tree_function_time.search(interval);
+	const rects = draw.tree_parallel_regions.search(interval);
 	rects.forEach((par_region: RectangleBorder) => {
 		const x = (par_region.x / WIDTH_FACTOR) * zoom.scale_x + pan.x;
 		const y = par_region.y + pan.y;
